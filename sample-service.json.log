@@ -1,0 +1,9 @@
+{"timestamp":"2026-11-09T10:14:01.120Z","level":"info","service":"gateway","message":"Gateway proxy started on port 4000","protocol":"HTTP/2"}
+{"timestamp":"2026-11-09T10:14:02.340Z","level":"info","service":"auth","message":"Public key rotated","keyId":"rsa-k-09","algorithm":"RS256"}
+{"timestamp":"2026-11-09T10:14:15.002Z","level":"debug","service":"cache","message":"Cache hit for session token","cacheKey":"sess:99120","latencyMs":0.4}
+{"timestamp":"2026-11-09T10:15:30.812Z","level":"warn","service":"rate-limiter","message":"Client rate threshold reached 90%","clientIp":"192.168.1.100","remaining":5}
+{"timestamp":"2026-11-09T10:16:00.104Z","level":"info","service":"orders","message":"Order created successfully","orderId":"ord_44120","userId":"usr_772","amount":150.00}
+{"timestamp":"2026-11-09T10:18:45.920Z","level":"error","service":"payment","message":"Payment gateway connection timeout","provider":"Midtrans","orderId":"ord_44120","statusCode":504}
+{"timestamp":"2026-11-09T10:18:46.010Z","level":"warn","service":"retry-mgr","message":"Enqueued payment retry attempt 1/3","jobId":"job_9812","delaySeconds":15}
+{"timestamp":"2026-11-09T10:20:15.550Z","level":"error","service":"notification","message":"Failed to dispatch push notification to device","deviceToken":"fcm-tok-88","errorCode":"DEVICE_UNREACHABLE"}
+{"timestamp":"2026-11-09T10:21:00.000Z","level":"info","service":"health","message":"System telemetry check completed","status":"HEALTHY","cpuUsage":"14%","memoryUsage":"42%"}

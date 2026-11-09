@@ -1,0 +1,12 @@
+2026-11-09 10:14:01 [INFO] [System] Application server starting on port 8080...
+2026-11-09 10:14:02 [INFO] [Database] Connection pool initialized with 10 max connections.
+2026-11-09 10:14:05 [INFO] [AuthService] JWT secret loaded, signing method RS256.
+2026-11-09 10:14:10 [DEBUG] [Cache] Redis cache connected at 127.0.0.1:6379.
+2026-11-09 10:15:20 [INFO] [Router] Registered 24 endpoints.
+2026-11-09 10:16:00 [WARN] [RateLimit] Client 192.168.1.45 reached 85% of rate limit threshold.
+2026-11-09 10:17:12 [INFO] [OrderService] Created order #10842 for customer uid=491.
+2026-11-09 10:18:45 [ERROR] [PaymentService] Payment gateway timeout for order #10842 (provider=Midtrans).
+2026-11-09 10:18:46 [WARN] [RetryQueue] Enqueuing retry 1/3 for payment transaction #9910.
+2026-11-09 10:19:00 [DEBUG] [Worker] Running cleanup cron job for expired user sessions.
+2026-11-09 10:20:15 [ERROR] [Notification] Failed to send email to user@domain.com: SMTP 504 error.
+2026-11-09 10:21:00 [INFO] [HealthCheck] Service health status: OK (CPU: 12%, Mem: 44%).
