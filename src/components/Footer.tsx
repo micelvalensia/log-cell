@@ -24,11 +24,15 @@ function PromptBar({
     pulseGlyph: string;
     totalMatches?: number;
 }) {
+    const hint = isSearch
+        ? "›› SCAN // SEARCH: "
+        : "›› ISOLATE (e.g. 'level:info', 'payload:orderId'): ";
+
     return (
         <Box justifyContent="space-between" width="100%">
             <Text wrap="truncate-end">
                 <Text bold color={isSearch ? "greenBright" : "magentaBright"}>
-                    {isSearch ? "›› SCAN // SEARCH: " : "›› ISOLATE // QUERY: "}
+                    {hint}
                 </Text>
                 <Text bold color="white">
                     {inputValue}
@@ -73,16 +77,13 @@ function StatusBar({
             <Text wrap="truncate-end">
                 <Text bold color="cyanBright">[J/K] </Text><Text color="gray">NAV </Text>
                 <Text bold color="cyanBright">[TAB] </Text><Text color="gray">PANE </Text>
+                <Text bold color="cyanBright">[1-4] </Text><Text color="gray">LVL </Text>
+                <Text bold color="cyanBright">[E] </Text><Text color="gray">EXPAND </Text>
+                <Text bold color="cyanBright">[ENTER] </Text><Text color="gray">INSPECT </Text>
+                <Text bold color="cyanBright">[F] </Text><Text color="gray">FILTER </Text>
                 <Text bold color="cyanBright">[/] </Text><Text color="gray">SCAN </Text>
-                <Text bold color="cyanBright">[F] </Text><Text color="gray">ISOLATE </Text>
                 <Text bold color="cyanBright">[S] </Text><Text color="gray">VIEW </Text>
                 <Text bold color="magentaBright">[Q] </Text><Text color="gray">QUIT</Text>
-                {!isCompact && (
-                    <>
-                        <Text color="gray"> ┆ ∿ 120Hz ┆ </Text>
-                        <Text bold color="greenBright">OK</Text>
-                    </>
-                )}
             </Text>
         </Box>
     );

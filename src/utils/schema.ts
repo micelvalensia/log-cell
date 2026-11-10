@@ -140,7 +140,7 @@ function parseJsonLog(line: string): ParsedLogEntry | null {
             raw: line,
             timestamp: formatTime(timestamp),
             level: mapLogLevel(level),
-            module: module ? module.slice(0, 12) : "",
+            module: module ? String(module) : "",
             message: message || (Object.keys(extra).length > 0 ? "" : line),
             extra,
             format: "json",
@@ -194,7 +194,7 @@ function parseLogfmt(line: string): ParsedLogEntry | null {
         raw: line,
         timestamp: formatTime(timestamp),
         level: mapLogLevel(level),
-        module: module ? module.slice(0, 12) : "",
+        module: module ? String(module) : "",
         message: message || line,
         extra,
         format: "logfmt",
@@ -212,7 +212,7 @@ function parseStandardLog(line: string): ParsedLogEntry | null {
             raw: line,
             timestamp: formatTime(springMatch[1]),
             level: mapLogLevel(springMatch[3]),
-            module: mod.slice(0, 12),
+            module: mod,
             message: springMatch[5] || "",
             format: "standard",
         };
@@ -227,7 +227,7 @@ function parseStandardLog(line: string): ParsedLogEntry | null {
             raw: line,
             timestamp: formatTime(bracketMatch[1]),
             level: mapLogLevel(bracketMatch[2]),
-            module: bracketMatch[3] ? bracketMatch[3].slice(0, 12) : "",
+            module: bracketMatch[3] ? bracketMatch[3] : "",
             message: bracketMatch[4] || "",
             format: "standard",
         };
@@ -246,9 +246,18 @@ export function parseLogLine(raw: string): ParsedLogEntry {
     const standardParsed = parseStandardLog(raw);
     if (standardParsed) return standardParsed;
 
+    let fallbackLevel = "INFO";
+    if (/\b(?:ERROR|FATAL|CRIT|EXCEPTION|FAIL)\b/i.test(raw)) {
+        fallbackLevel = "ERROR";
+    } else if (/\b(?:WARN|WARNING)\b/i.test(raw)) {
+        fallbackLevel = "WARN";
+    } else if (/\b(?:DEBUG|TRACE)\b/i.test(raw)) {
+        fallbackLevel = "DEBUG";
+    }
+
     return {
         raw,
-        level: "INFO",
+        level: fallbackLevel,
         message: raw,
         format: "raw",
     };

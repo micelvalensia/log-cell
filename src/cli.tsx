@@ -31,8 +31,12 @@ if (arg === "-h" || arg === "--help") {
     [j] / [k]          Navigate down / up (files or log stream)
     [g] / [G]          Jump to top / bottom
     [Tab]              Toggle focus between Index and Stream pane
+    [1] / [2] / [3]    Quick filter level (1:ERROR, 2:WARN, 3:INFO, 4:DEBUG, 0:ALL)
+    [e] / [Space]      Toggle inline expand on selected log record
+    [E]                Toggle expand all visible records
+    [Enter]            Open Full Telemetry Inspector modal (deep view)
     [/]                Live keyword scan with glowing highlights
-    [f]                Isolate matching log lines (filter trap)
+    [f]                Schema-aware filter (e.g. 'level:info payload:auth')
     [s]                Toggle Matrix Schema (JSON auto-map) / Raw view
     [Esc]              Clear active scan / isolation filter
     [q]                Halt process and exit cleanly

@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 import React from "react";
-import type { ViewMode } from "../types";
+import type { LogLevelFilter, ViewMode } from "../types";
 
 export const COMPACT_TERMINAL_WIDTH = 95;
 
@@ -10,6 +10,7 @@ interface HeaderProps {
     totalFiles: number;
     viewMode: ViewMode;
     filterText?: string;
+    levelFilter?: LogLevelFilter;
     isTruncated?: boolean;
     systemTick?: number;
     terminalWidth?: number;
@@ -36,17 +37,36 @@ function HudIdentity({ systemTick }: { systemTick: number }) {
     );
 }
 
+function getLevelBadgeColor(filter?: LogLevelFilter): "magentaBright" | "yellowBright" | "cyanBright" | "gray" {
+    if (filter === "ERROR") return "magentaBright";
+    if (filter === "WARN") return "yellowBright";
+    if (filter === "INFO") return "cyanBright";
+    return "gray";
+}
+
+function LevelBadge({ levelFilter }: { levelFilter?: LogLevelFilter }) {
+    if (!levelFilter || levelFilter === "ALL") return null;
+    const levelColor = getLevelBadgeColor(levelFilter);
+    return (
+        <Text bold color={levelColor}>
+            [LVL: {levelFilter}]
+        </Text>
+    );
+}
+
 function StatusBadges({
     viewMode,
     isCompact,
     isTruncated,
     filterText,
+    levelFilter,
     schemaFormat,
 }: {
     viewMode: ViewMode;
     isCompact: boolean;
     isTruncated?: boolean;
     filterText?: string;
+    levelFilter?: LogLevelFilter;
     schemaFormat?: string;
 }) {
     const isSchema = viewMode === "schema";
@@ -71,6 +91,7 @@ function StatusBadges({
                     [TAIL]
                 </Text>
             )}
+            <LevelBadge levelFilter={levelFilter} />
             {trapLabel && (
                 <Text bold color="magentaBright">
                     [TRAP: "{trapLabel}"]
@@ -107,6 +128,7 @@ export default function Header({
     totalFiles,
     viewMode,
     filterText,
+    levelFilter,
     isTruncated,
     systemTick = 0,
     terminalWidth = 80,
@@ -128,6 +150,7 @@ export default function Header({
                     isCompact={isCompact}
                     isTruncated={isTruncated}
                     filterText={filterText}
+                    levelFilter={levelFilter}
                     schemaFormat={schemaFormat}
                 />
             </Box>

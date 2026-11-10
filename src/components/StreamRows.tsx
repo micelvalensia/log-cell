@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import React from "react";
-import { formatPayloadExtra, parseLogLine } from "../utils/schema";
+import type { ParsedLogEntry } from "../types";
+import { formatPayloadExtra } from "../utils/schema";
 
 function escapeRegex(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -42,7 +43,7 @@ export function LevelIndicator({ level }: { level: string }) {
     }
     if (upper.includes("WARN")) {
         return (
-            <Text bold color="greenBright">
+            <Text bold color="yellowBright">
                 {"▲ WARN "}
             </Text>
         );
@@ -61,23 +62,82 @@ export function LevelIndicator({ level }: { level: string }) {
     );
 }
 
-export function MatrixRow({
-    line,
-    lineNum,
+function ExpandedPayloadItem({
+    keyName,
+    value,
+    isLast,
     searchQuery,
 }: {
-    line: string;
-    lineNum: string;
+    keyName: string;
+    value: any;
+    isLast: boolean;
     searchQuery: string;
 }) {
-    const entry = parseLogLine(line);
+    const branch = isLast ? "└─" : "├─";
+    const strVal = typeof value === "object" ? JSON.stringify(value) : String(value);
+
+    return (
+        <Text key={keyName} wrap="wrap">
+            <Text color="gray">    │  {branch} </Text>
+            <Text bold color="cyan">{keyName}: </Text>
+            <HighlightedText text={strVal} query={searchQuery} />
+        </Text>
+    );
+}
+
+function ExpandedPayloadTree({
+    extra,
+    searchQuery,
+}: {
+    extra?: Record<string, any>;
+    searchQuery: string;
+}) {
+    if (!extra) return null;
+    const entries = Object.entries(extra);
+    if (entries.length === 0) return null;
+
+    return (
+        <Box flexDirection="column" paddingLeft={3}>
+            {entries.map(([k, v], idx) => (
+                <ExpandedPayloadItem
+                    key={k}
+                    keyName={k}
+                    value={v}
+                    isLast={idx === entries.length - 1}
+                    searchQuery={searchQuery}
+                />
+            ))}
+        </Box>
+    );
+}
+
+export function MatrixRow({
+    entry,
+    lineNum,
+    searchQuery,
+    isSelected = false,
+    isFocused = false,
+    isExpanded = false,
+}: {
+    entry: ParsedLogEntry;
+    lineNum: string;
+    searchQuery: string;
+    isSelected?: boolean;
+    isFocused?: boolean;
+    isExpanded?: boolean;
+}) {
+    const cursorPrefix = isSelected && isFocused ? "▶" : isSelected ? "▷" : " ";
+    const cursorColor = isFocused ? "greenBright" : "cyan";
 
     if (entry.format === "raw") {
         return (
-            <Text wrap="truncate-end">
-                <Text color="gray">{lineNum} │ </Text>
-                <HighlightedText text={line} query={searchQuery} />
-            </Text>
+            <Box flexDirection="column">
+                <Text wrap={isExpanded ? "wrap" : "truncate-end"}>
+                    <Text bold color={cursorColor}>{cursorPrefix}</Text>
+                    <Text color={isSelected ? "white" : "gray"}>{lineNum} │ </Text>
+                    <HighlightedText text={entry.raw} query={searchQuery} />
+                </Text>
+            </Box>
         );
     }
 
@@ -85,46 +145,79 @@ export function MatrixRow({
     const tagStr = entry.module ? entry.module.slice(0, 6).padEnd(6, " ") : "      ";
     const extraStr = formatPayloadExtra(entry.extra);
 
-    return (
-        <Text wrap="truncate-end">
-            <Text color="gray">{lineNum} │ </Text>
-            <Text color="cyan">{timeStr} </Text>
-            <Text color="gray">│ </Text>
-            <LevelIndicator level={entry.level} />
-            <Text color="gray">│ </Text>
-            <Text color="cyanBright">{tagStr} </Text>
-            <Text color="gray">│ </Text>
-            <HighlightedText text={entry.message} query={searchQuery} />
-            {extraStr ? (
-                <Text color="gray">
+    // Collapsed single-line view
+    if (!isExpanded) {
+        return (
+            <Text wrap="truncate-end">
+                <Text bold color={cursorColor}>{cursorPrefix}</Text>
+                <Text color={isSelected ? "white" : "gray"}>{lineNum} │ </Text>
+                <Text color="cyan">{timeStr} </Text>
+                <Text color="gray">│ </Text>
+                <LevelIndicator level={entry.level} />
+                <Text color="gray">│ </Text>
+                <Text color="cyanBright">{tagStr} </Text>
+                <Text color="gray">│ </Text>
+                <HighlightedText text={entry.message} query={searchQuery} />
+                {extraStr ? (
                     <HighlightedText text={extraStr} query={searchQuery} />
-                </Text>
-            ) : null}
-        </Text>
+                ) : null}
+            </Text>
+        );
+    }
+
+    return (
+        <Box flexDirection="column" marginBottom={0}>
+            {/* Header / Primary Line */}
+            <Text wrap="wrap">
+                <Text bold color={cursorColor}>{cursorPrefix}</Text>
+                <Text bold color={isSelected ? "white" : "gray"}>{lineNum} │ </Text>
+                <Text color="cyan">{timeStr} </Text>
+                <Text color="gray">│ </Text>
+                <LevelIndicator level={entry.level} />
+                <Text color="gray">│ </Text>
+                <Text color="cyanBright">{tagStr} </Text>
+                <Text color="gray">│ </Text>
+                <HighlightedText text={entry.message} query={searchQuery} />
+            </Text>
+
+            {/* Expanded Payload Tree */}
+            <ExpandedPayloadTree extra={entry.extra} searchQuery={searchQuery} />
+        </Box>
     );
 }
 
 export function TelemetryRow({
-    line,
+    entry,
     lineNum,
     searchQuery,
+    isSelected = false,
+    isFocused = false,
+    isExpanded = false,
 }: {
-    line: string;
+    entry: ParsedLogEntry;
     lineNum: string;
     searchQuery: string;
+    isSelected?: boolean;
+    isFocused?: boolean;
+    isExpanded?: boolean;
 }) {
-    let textColor: "magentaBright" | "greenBright" | "cyanBright" | "white" = "white";
+    let textColor: "magentaBright" | "yellowBright" | "cyanBright" | "white" = "white";
+    const line = entry.raw;
     if (/error|fatal|exception|fail|crit/i.test(line)) {
         textColor = "magentaBright";
     } else if (/warn|warning/i.test(line)) {
-        textColor = "greenBright";
+        textColor = "yellowBright";
     } else if (/info/i.test(line)) {
         textColor = "cyanBright";
     }
 
+    const cursorPrefix = isSelected && isFocused ? "▶" : isSelected ? "▷" : " ";
+    const cursorColor = isFocused ? "greenBright" : "cyan";
+
     return (
-        <Text wrap="truncate-end">
-            <Text color="gray">{lineNum} │ </Text>
+        <Text wrap={isExpanded ? "wrap" : "truncate-end"}>
+            <Text bold color={cursorColor}>{cursorPrefix}</Text>
+            <Text color={isSelected ? "white" : "gray"}>{lineNum} │ </Text>
             {searchQuery ? (
                 <HighlightedText text={line} query={searchQuery} />
             ) : (
@@ -138,11 +231,11 @@ export function TelemetryRow({
 
 export function ColumnHeader({ isSchema, previewWidth }: { isSchema: boolean; previewWidth: number }) {
     if (isSchema) {
-        const payloadLength = Math.max(4, previewWidth - 36);
+        const payloadLength = Math.max(4, previewWidth - 37);
         return (
             <Box flexDirection="column" width={previewWidth} marginBottom={0}>
                 <Text wrap="truncate-end">
-                    <Text color="gray">  LN │ </Text>
+                    <Text color="gray">   LN │ </Text>
                     <Text color="cyan">TIME     </Text>
                     <Text color="gray">│ </Text>
                     <Text color="cyan">LVL    </Text>
@@ -152,21 +245,21 @@ export function ColumnHeader({ isSchema, previewWidth }: { isSchema: boolean; pr
                     <Text color="white">EVENT / PAYLOAD</Text>
                 </Text>
                 <Text color="gray" wrap="truncate-end">
-                    {"─────┼──────────┼────────┼────────┼" + "─".repeat(payloadLength)}
+                    {"──────┼──────────┼────────┼────────┼" + "─".repeat(payloadLength)}
                 </Text>
             </Box>
         );
     }
 
-    const payloadLength = Math.max(4, previewWidth - 7);
+    const payloadLength = Math.max(4, previewWidth - 8);
     return (
         <Box flexDirection="column" width={previewWidth} marginBottom={0}>
             <Text wrap="truncate-end">
-                <Text color="gray">  LN │ </Text>
+                <Text color="gray">   LN │ </Text>
                 <Text color="white">RAW TELEMETRY DATA STREAM</Text>
             </Text>
             <Text color="gray" wrap="truncate-end">
-                {"─────┼" + "─".repeat(payloadLength)}
+                {"──────┼" + "─".repeat(payloadLength)}
             </Text>
         </Box>
     );

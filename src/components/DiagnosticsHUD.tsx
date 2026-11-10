@@ -1,12 +1,14 @@
 import { Box, Text } from "ink";
 import React from "react";
-import type { LogFileInfo } from "../types";
+import type { LogFileInfo, LogLevelFilter } from "../types";
 
 interface DiagnosticsHUDProps {
     activeFile?: LogFileInfo;
     lineCount: number;
+    totalRecords?: number;
     isTruncated?: boolean;
     filterQuery?: string;
+    levelFilter?: LogLevelFilter;
     systemTick?: number;
     schemaFormat?: string;
 }
@@ -41,23 +43,46 @@ function HUDHeader({ pulseTick }: { pulseTick: string }) {
     );
 }
 
+function getTrapColor(filter?: LogLevelFilter): "magentaBright" | "yellowBright" | "cyanBright" {
+    if (filter === "ERROR") return "magentaBright";
+    if (filter === "WARN") return "yellowBright";
+    return "cyanBright";
+}
+
+function LevelTrapRow({ levelFilter }: { levelFilter?: LogLevelFilter }) {
+    if (!levelFilter || levelFilter === "ALL") return null;
+
+    return (
+        <Box justifyContent="space-between" width="100%">
+            <Text color="cyanBright">  LVL_TRAP</Text>
+            <Text bold color={getTrapColor(levelFilter)}>
+                [{levelFilter}]
+            </Text>
+        </Box>
+    );
+}
+
 function HUDMetrics({
     statusColor,
     isOnline,
     memoryPercent,
     lineCount,
+    totalRecords,
     isTruncated,
     streamMode,
     filterQuery,
+    levelFilter,
     schemaFormat,
 }: {
     statusColor: "greenBright" | "gray";
     isOnline: boolean;
     memoryPercent: number;
     lineCount: number;
+    totalRecords?: number;
     isTruncated?: boolean;
     streamMode: string;
     filterQuery?: string;
+    levelFilter?: LogLevelFilter;
     schemaFormat?: string;
 }) {
     const isolateLabel = filterQuery
@@ -67,6 +92,9 @@ function HUDMetrics({
         : "";
 
     const schemaLabel = schemaFormat === "JSON" ? "JSON_OBJECT" : schemaFormat === "LOGFMT" ? "LOGFMT_MAP" : "REGEX_MAP";
+    const recordLabel = totalRecords && totalRecords !== lineCount
+        ? `${lineCount}/${totalRecords}`
+        : `${lineCount} LINES`;
 
     return (
         <Box flexDirection="column">
@@ -82,7 +110,7 @@ function HUDMetrics({
 
             <Box justifyContent="space-between" width="100%">
                 <Text color="gray">  RECORDS</Text>
-                <Text bold color="white">{lineCount} LINES</Text>
+                <Text bold color="white">{recordLabel}</Text>
             </Box>
 
             <Box justifyContent="space-between" width="100%">
@@ -94,6 +122,8 @@ function HUDMetrics({
                 <Text color="gray">  SCHEMA_MAP</Text>
                 <Text bold color={schemaFormat === "JSON" ? "greenBright" : "cyanBright"}>{schemaLabel}</Text>
             </Box>
+
+            <LevelTrapRow levelFilter={levelFilter} />
 
             {isolateLabel && (
                 <Box justifyContent="space-between" width="100%">
@@ -108,8 +138,10 @@ function HUDMetrics({
 export default function DiagnosticsHUD({
     activeFile,
     lineCount,
+    totalRecords,
     isTruncated,
     filterQuery,
+    levelFilter,
     systemTick = 0,
     schemaFormat = "STANDARD",
 }: DiagnosticsHUDProps) {
@@ -127,9 +159,11 @@ export default function DiagnosticsHUD({
                 isOnline={Boolean(activeFile)}
                 memoryPercent={memoryPercent}
                 lineCount={lineCount}
+                totalRecords={totalRecords}
                 isTruncated={isTruncated}
                 streamMode={streamMode}
                 filterQuery={filterQuery}
+                levelFilter={levelFilter}
                 schemaFormat={schemaFormat}
             />
 

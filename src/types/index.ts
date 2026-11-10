@@ -15,6 +15,7 @@ export interface FileReadResult {
 export type ActivePane = "files" | "preview";
 export type InputMode = "normal" | "search" | "filter";
 export type ViewMode = "raw" | "schema";
+export type LogLevelFilter = "ALL" | "ERROR" | "WARN" | "INFO" | "DEBUG";
 
 export interface ParsedLogEntry {
     raw: string;
@@ -24,4 +25,5 @@ export interface ParsedLogEntry {
     message: string;
     extra?: Record<string, any>;
     format: "json" | "logfmt" | "standard" | "raw";
+    lineIndex?: number;
 }
